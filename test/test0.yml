@@ -1,0 +1,48 @@
+- name: "CTRL_REG"
+  width: 8
+  fields:
+    - name: "A"
+      direction: W
+      description: "Apply TEST_REG0 changes"
+      offset: 6 
+      width: 1
+    - name: "B"
+      direction: W
+      description: "Apply TEST_REG0 changes"
+      offset: 0 
+      width: 1
+      
+- name: "CTRL_REG_B"
+  width: 8
+  fields:
+    - name: "CX"
+      direction: W
+      default: 1
+      description: "CX description"
+      offset: 5 
+      width: 1
+    - name: "DX"
+      default: 0
+      direction: W
+      description: "DX description"
+      offset: 0 
+      width: 1
+
+- name: "TEST_REG0"
+  width: 16
+  description: "Test register 0"
+  fields:
+  - name: "TB"
+    direction: RW
+    description: "test bits"
+    default: 5
+    offset: 0 
+    width: 3
+    
+  - name: "BX"
+    direction: RW
+    description: "another test bits"
+    default: 3
+    offset: 3
+    width: 2
+  activation_bit: "CTRL_REG.A"
