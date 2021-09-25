@@ -163,12 +163,13 @@ class CHeader(TextDoc, Template):
 
 class VHDL(TextDoc, Template):
 
-    def __init__(self, template, protocol) -> None:
+    def __init__(self, template, protocol, name) -> None:
         Template.__init__(self, template)
         TextDoc.__init__(self)
 
         self.templ_prefix = "-- "
         self.protocol = protocol
+        self.name = name
 
     def template_port_declaration(self):
         text = ""
@@ -229,6 +230,9 @@ class VHDL(TextDoc, Template):
             address += 1
         return text[:-1]
 
+    def __str__(self) -> str:
+        return super().__str__().replace('entity_name', self.name)
+
 
 if __name__ == "__main__":
 
@@ -244,7 +248,7 @@ if __name__ == "__main__":
     with io.open('templates/template.h', 'r') as file:
         h_template = file.read()
 
-    vhdl = VHDL(vhdl_template, yaml_protocol)
+    vhdl = VHDL(vhdl_template, yaml_protocol, 'test0')
     vhdl.save('test/test0.vhd')
 
     c_header = CHeader(h_template, yaml_protocol)

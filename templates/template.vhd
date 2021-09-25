@@ -2,7 +2,7 @@ LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
 
-ENTITY {entity_name} IS
+ENTITY entity_name IS
     PORT (
         rst_a_i     : STD_LOGIC;
         clk_i       : STD_LOGIC;
@@ -14,9 +14,9 @@ ENTITY {entity_name} IS
         avl_write_i : IN STD_LOGIC;
         avl_read_i  : IN STD_LOGIC
     );
-END ENTITY {entity_name};
+END ENTITY entity_name;
 
-ARCHITECTURE rtl OF {entity_name} IS
+ARCHITECTURE rtl OF entity_name IS
 
 BEGIN
 
