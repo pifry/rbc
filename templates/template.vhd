@@ -9,10 +9,11 @@ ENTITY entity_name IS
 
 -- {port_declaration}
 
-        avl_addr_i  : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        avl_data_b  : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        avl_write_i : IN STD_LOGIC;
-        avl_read_i  : IN STD_LOGIC
+-- {bus_port}
+        -- avl_addr_i  : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        -- avl_data_b  : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        -- avl_write_i : IN STD_LOGIC;
+        -- avl_read_i  : IN STD_LOGIC
     );
 END ENTITY entity_name;
 

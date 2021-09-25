@@ -12,6 +12,9 @@ class Protocol:
 
         class Field:
 
+            READABLE = ('R', 'RW')
+            WRITABLE = ('W', 'RW')
+
             def __init__(self, data, parent) -> None:
                 self._data = data
                 self.name = self._data['name']
@@ -55,6 +58,12 @@ class Protocol:
 
     def registers(self):
         return (Protocol.Register(register) for register in self.__registers_dict__)
+
+    def required_bus_data_width(self):
+        return 16
+
+    def required_bus_address_width(self):
+        return 7
 
 
 class TextDoc:
@@ -175,12 +184,26 @@ class VHDL(TextDoc, Template):
         self.protocol = protocol
         self.name = name
 
+    def template_bus_port(self):
+        text = ""
+        text += 8*" " + f'avl_addr_i : IN std_logic_vector({self.protocol.required_bus_data_width()} downto 0);\n'
+        text += 8*" " + f'avl_data_i : INOUT std_logic_vector({self.protocol.required_bus_address_width()} downto 0);\n'
+        text += 8*" " + f'avl_write_i : IN std_logic;\n'
+        text += 8*" " + f'avl_read_i : IN std_logic\n'
+        return text
+
     def template_port_declaration(self):
         text = ""
         for register in self.protocol.registers():
             for field in register.fields():
-                text += 8*" " + \
-                    f'{field.full_name()} : {"OUT" if field.direction == "W" else "IN"} std_logic_vector({field.range()});\n'
+
+                if field.direction in field.WRITABLE :
+                    text += 8*" " + \
+                        f'{field.full_name()}_o : OUT std_logic_vector({field.range()});\n'
+
+                if field.direction in field.READABLE:
+                    text += 8*" " + \
+                            f'{field.full_name()}_i : IN std_logic_vector({field.range()});\n'
         return text[:-1]
 
     def template_write_process(self) -> str:
@@ -189,8 +212,9 @@ class VHDL(TextDoc, Template):
         for register in self.protocol.registers():
             text += 20*" " + f'when {address} =>\n'
             for field in register.fields():
-                text += 24 * " " + \
-                    f"{field.full_name()} <= avl_data_b({field.absolute_range()});\n"
+                if field.direction in field.WRITABLE:
+                    text += 24 * " " + \
+                        f"{field.full_name()}_o <= avl_data_b({field.absolute_range()});\n"
             address += 1
         return text[:-1]
 
@@ -198,7 +222,8 @@ class VHDL(TextDoc, Template):
         text = ""
         for register in self.protocol.registers():
             for field in register.fields():
-                text += 12*" " + f"{field.full_name()} <= (others => '0');\n"
+                if field.direction in field.WRITABLE:
+                    text += 12*" " + f"{field.full_name()}_o <= (others => '0');\n"
         return text[:-1]
 
     def template_read_process(self) -> str:
@@ -206,23 +231,23 @@ class VHDL(TextDoc, Template):
         address = 0
         for register in self.protocol.registers():
             text += 20*" " + f'when {address} =>\n'
-            text += 24*" " + "avl_data_b <= "
+            text += 24*" " + f"avl_data_b({register.width} - 1 downto 0) <= "
             equation_text = ""
             zeros = ""
             i = register.width - 1
             while i >= 0:
                 try:
                     field = next(field for field in register.fields()
-                                 if field.offset + field.width - 1 == i)
+                                 if field.offset + field.width - 1 == i and field.direction in field.READABLE)
                 except StopIteration:
                     field = None
                 if field:
                     i -= field.width
                     if zeros != "":
-                        equation_text += f'"{zeros}" & {field.full_name()}'
+                        equation_text += f'"{zeros}" & {field.full_name()}_i'
                         zeros = ""
                     else:
-                        equation_text += f'{field.full_name()}'
+                        equation_text += f'{field.full_name()}_i'
                     if i >= 0:
                         equation_text += " & "
                 else:
