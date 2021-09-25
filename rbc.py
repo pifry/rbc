@@ -145,12 +145,16 @@ class Markdown(TextDoc):
 
 
 class CHeader(TextDoc, Template):
-    def __init__(self, template, protocol) -> None:
+    def __init__(self, template, protocol, name) -> None:
         Template.__init__(self, template)
         TextDoc.__init__(self)
 
         self.templ_prefix = "// "
         self.protocol = protocol
+        self.name = name.upper()
+
+    def template_name(self):
+        return self.name
 
     def template_definitions(self) -> str:
         text = ""
@@ -251,7 +255,7 @@ if __name__ == "__main__":
     vhdl = VHDL(vhdl_template, yaml_protocol, 'test0')
     vhdl.save('test/test0.vhd')
 
-    c_header = CHeader(h_template, yaml_protocol)
+    c_header = CHeader(h_template, yaml_protocol, 'test0')
     c_header.save('test/test0.h')
 
     mkdw = Markdown(yaml_protocol)
