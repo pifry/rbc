@@ -187,7 +187,7 @@ class VHDL(TextDoc, Template):
     def template_bus_port(self):
         text = ""
         text += 8*" " + f'avl_addr_i : IN std_logic_vector({self.protocol.required_bus_data_width()} downto 0);\n'
-        text += 8*" " + f'avl_data_i : INOUT std_logic_vector({self.protocol.required_bus_address_width()} downto 0);\n'
+        text += 8*" " + f'avl_data_b : INOUT std_logic_vector({self.protocol.required_bus_address_width()} downto 0);\n'
         text += 8*" " + f'avl_write_i : IN std_logic;\n'
         text += 8*" " + f'avl_read_i : IN std_logic\n'
         return text

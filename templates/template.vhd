@@ -21,13 +21,13 @@ ARCHITECTURE rtl OF entity_name IS
 
 BEGIN
 
-    avl_read : PROCESS (clk, rst)
+    avl_read : PROCESS (clk_i, rst_a_i)
     BEGIN
-        IF rst = '1' THEN
+        IF rst_a_i = '1' THEN
             avl_data_b <= (OTHERS => 'Z');
-            ELSIF rising_edge(clk) THEN
+            ELSIF rising_edge(clk_i) THEN
             IF avl_read_i = '1' THEN
-                CASE (avl_addr_i) IS
+                CASE (to_integer(unsigned(avl_addr_i))) IS
 -- {read_process}
                     WHEN OTHERS =>
                         avl_data_b <= (OTHERS => 'Z');
@@ -38,13 +38,13 @@ BEGIN
         END IF;
     END PROCESS avl_read;
 
-    avl_write : PROCESS (clk, rst)
+    avl_write : PROCESS (clk_i, rst_a_i)
     BEGIN
-        IF rst = '1' THEN
+        IF rst_a_i = '1' THEN
 -- {default_values}
-            ELSIF rising_edge(clk) THEN
+            ELSIF rising_edge(clk_i) THEN
             IF avl_write_i = '1' THEN
-                CASE (avl_addr_i) IS
+                CASE (to_integer(unsigned(avl_addr_i))) IS
 -- {write_process}
                     WHEN OTHERS =>
                         NULL;
