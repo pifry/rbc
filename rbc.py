@@ -4,6 +4,7 @@ from io import open
 import argparse
 import logging
 from logging import info
+import os
 
 
 class Protocol:
@@ -186,8 +187,10 @@ class VHDL(TextDoc, Template):
 
     def template_bus_port(self):
         text = ""
-        text += 8*" " + f'avl_addr_i : IN std_logic_vector({self.protocol.required_bus_data_width()} downto 0);\n'
-        text += 8*" " + f'avl_data_b : INOUT std_logic_vector({self.protocol.required_bus_address_width()} downto 0);\n'
+        text += 8*" " + \
+            f'avl_addr_i : IN std_logic_vector({self.protocol.required_bus_data_width()} downto 0);\n'
+        text += 8*" " + \
+            f'avl_data_b : INOUT std_logic_vector({self.protocol.required_bus_address_width()} downto 0);\n'
         text += 8*" " + f'avl_write_i : IN std_logic;\n'
         text += 8*" " + f'avl_read_i : IN std_logic\n'
         return text
@@ -197,13 +200,13 @@ class VHDL(TextDoc, Template):
         for register in self.protocol.registers():
             for field in register.fields():
 
-                if field.direction in field.WRITABLE :
+                if field.direction in field.WRITABLE:
                     text += 8*" " + \
                         f'{field.full_name()}_o : OUT std_logic_vector({field.range()});\n'
 
                 if field.direction in field.READABLE:
                     text += 8*" " + \
-                            f'{field.full_name()}_i : IN std_logic_vector({field.range()});\n'
+                        f'{field.full_name()}_i : IN std_logic_vector({field.range()});\n'
         return text[:-1]
 
     def template_write_process(self) -> str:
@@ -223,7 +226,8 @@ class VHDL(TextDoc, Template):
         for register in self.protocol.registers():
             for field in register.fields():
                 if field.direction in field.WRITABLE:
-                    text += 12*" " + f"{field.full_name()}_o <= (others => '0');\n"
+                    text += 12*" " + \
+                        f"{field.full_name()}_o <= (others => '0');\n"
         return text[:-1]
 
     def template_read_process(self) -> str:
@@ -263,25 +267,58 @@ class VHDL(TextDoc, Template):
         return super().__str__().replace('entity_name', self.name)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Generates various source files based on yaml protocol description.')
+    parser.add_argument('protocol_file', help='yaml protocol description')
+    parser.add_argument('-d, --vhdl-output', dest='vhdl_file',
+                        help='vhdl output file')
+    parser.add_argument('-m, --markdown-output',
+                        dest='markdown_file', help='markdown output file')
+    parser.add_argument('-c, --cheader-output',
+                        dest='cheader_file', help='c header output file')
+    parser.add_argument('-v, --verbose', action='store_true',
+                        dest='verbose', help='be verbose')
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
 
-    # TODO: if verbose
-    logging.basicConfig(level=logging.INFO)
+    templates_path = os.path.dirname(__file__)
+    vhdl_template_file = os.path.join(
+        templates_path, "templates", "template.vhd")
+    ched_template_file = os.path.join(
+        templates_path, "templates", "template.h")
 
-    with io.open('test/test0.yml', 'r') as file:
+    args = parse_args()
+    protocol_file = args.protocol_file
+    markdown_file = args.markdown_file
+    vhdl_file = args.vhdl_file
+    cheader_file = args.cheader_file
+
+    # TODO: if verbose
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+
+    with io.open(protocol_file, 'r') as file:
         yaml_protocol = Protocol(yaml.safe_load(file))
 
-    with io.open('templates/template.vhd', 'r') as file:
-        vhdl_template = file.read()
+    if vhdl_file:
+        with io.open(vhdl_template_file, 'r') as file:
+            vhdl_template = file.read()
 
-    with io.open('templates/template.h', 'r') as file:
-        h_template = file.read()
+        vhdl = VHDL(vhdl_template, yaml_protocol, 'test0')
+        vhdl.save(vhdl_file)
 
-    vhdl = VHDL(vhdl_template, yaml_protocol, 'test0')
-    vhdl.save('test/test0.vhd')
+    if cheader_file:
 
-    c_header = CHeader(h_template, yaml_protocol, 'test0')
-    c_header.save('test/test0.h')
+        with io.open(ched_template_file, 'r') as file:
+            h_template = file.read()
 
-    mkdw = Markdown(yaml_protocol)
-    mkdw.save('test/test0.md')
+        c_header = CHeader(h_template, yaml_protocol, 'test0')
+        c_header.save(cheader_file)
+
+    if markdown_file:
+        mkdw = Markdown(yaml_protocol)
+        mkdw.save(markdown_file)
