@@ -4,16 +4,12 @@ USE IEEE.numeric_std.ALL;
 
 ENTITY entity_name IS
     PORT (
-        rst_a_i     : STD_LOGIC;
-        clk_i       : STD_LOGIC;
+        rst_a_i : in STD_LOGIC;
+        clk_i   : in STD_LOGIC;
 
 -- {port_declaration}
 
 -- {bus_port}
-        -- avl_addr_i  : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        -- avl_data_b  : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        -- avl_write_i : IN STD_LOGIC;
-        -- avl_read_i  : IN STD_LOGIC
     );
 END ENTITY entity_name;
 
@@ -24,16 +20,18 @@ BEGIN
     avl_read : PROCESS (clk_i, rst_a_i)
     BEGIN
         IF rst_a_i = '1' THEN
-            avl_data_b <= (OTHERS => 'Z');
-            ELSIF rising_edge(clk_i) THEN
+            avl_readdata_o <= (OTHERS => '0');
+        ELSIF rising_edge(clk_i) THEN
             IF avl_read_i = '1' THEN
-                CASE (to_integer(unsigned(avl_addr_i))) IS
+                avl_readdatavalid_o <= '1';
+                CASE (to_integer(unsigned(avl_address_i))) IS
 -- {read_process}
                     WHEN OTHERS =>
-                        avl_data_b <= (OTHERS => 'Z');
+                        avl_readdata_o <= (OTHERS => '0');
                 END CASE;
-                ELSE
-                avl_data_b <= (OTHERS => 'Z');
+            ELSE
+                avl_readdata_o <= (OTHERS => '0');
+                avl_readdatavalid_o <= '0';
             END IF;
         END IF;
     END PROCESS avl_read;
@@ -42,9 +40,9 @@ BEGIN
     BEGIN
         IF rst_a_i = '1' THEN
 -- {default_values}
-            ELSIF rising_edge(clk_i) THEN
+        ELSIF rising_edge(clk_i) THEN
             IF avl_write_i = '1' THEN
-                CASE (to_integer(unsigned(avl_addr_i))) IS
+                CASE (to_integer(unsigned(avl_address_i))) IS
 -- {write_process}
                     WHEN OTHERS =>
                         NULL;
