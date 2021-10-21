@@ -64,7 +64,7 @@ class Protocol:
         return 16
 
     def required_bus_address_width(self):
-        return 7
+        return 8
 
 
 class TextDoc:
@@ -187,10 +187,10 @@ class VHDL(TextDoc, Template):
 
     def template_bus_port(self):
         text = ""
-        text += 8*" " + \
-            f'avl_addr_i : IN std_logic_vector({self.protocol.required_bus_data_width()} downto 0);\n'
-        text += 8*" " + \
-            f'avl_data_b : INOUT std_logic_vector({self.protocol.required_bus_address_width()} downto 0);\n'
+        text += 8*" " + f'avl_address_i : IN std_logic_vector({self.protocol.required_bus_address_width()} - 1 downto 0);\n'
+        text += 8*" " + f'avl_writedata_i : IN std_logic_vector({self.protocol.required_bus_data_width()} - 1 downto 0);\n'
+        text += 8*" " + f'avl_readdata_o : OUT std_logic_vector({self.protocol.required_bus_data_width()} - 1 downto 0);\n'
+        text += 8*" " + f'avl_readdatavalid_o : OUT std_logic;\n'
         text += 8*" " + f'avl_write_i : IN std_logic;\n'
         text += 8*" " + f'avl_read_i : IN std_logic\n'
         return text
@@ -217,7 +217,7 @@ class VHDL(TextDoc, Template):
             for field in register.fields():
                 if field.direction in field.WRITABLE:
                     text += 24 * " " + \
-                        f"{field.full_name()}_o <= avl_data_b({field.absolute_range()});\n"
+                        f"{field.full_name()}_o <= avl_writedata_i({field.absolute_range()});\n"
             address += 1
         return text[:-1]
 
@@ -226,8 +226,7 @@ class VHDL(TextDoc, Template):
         for register in self.protocol.registers():
             for field in register.fields():
                 if field.direction in field.WRITABLE:
-                    text += 12*" " + \
-                        f"{field.full_name()}_o <= (others => '0');\n"
+                    text += 12*" " + f"{field.full_name()}_o <= (others => '0');\n"
         return text[:-1]
 
     def template_read_process(self) -> str:
@@ -235,7 +234,7 @@ class VHDL(TextDoc, Template):
         address = 0
         for register in self.protocol.registers():
             text += 20*" " + f'when {address} =>\n'
-            text += 24*" " + f"avl_data_b({register.width} - 1 downto 0) <= "
+            text += 24*" " + f"avl_readdata_o({register.width} - 1 downto 0) <= "
             equation_text = ""
             zeros = ""
             i = register.width - 1
