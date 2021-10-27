@@ -28,6 +28,24 @@
       offset: 0 
       width: 1
 
+- name: "CTRL_REG_C"
+  width: 8
+  fields:
+    - name: "EX"
+      direction: W
+      default: 1
+      description: "EX description"
+      offset: 2 
+      width: 1
+      write_ind: true
+    - name: "FX"
+      default: 0
+      direction: W
+      description: "FX description"
+      offset: 3 
+      width: 1
+  read_ind: true
+
 - name: "TEST_REG0"
   width: 16
   description: "Test register 0"
