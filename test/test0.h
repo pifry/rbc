@@ -12,7 +12,10 @@ not modify it until you know what you're doing.
 #define CTRL_REG_B 1
 #define CTRL_REG_B_CX_OFFSET 5
 #define CTRL_REG_B_DX_OFFSET 0
-#define TEST_REG0 2
+#define CTRL_REG_C 2
+#define CTRL_REG_C_EX_OFFSET 2
+#define CTRL_REG_C_FX_OFFSET 3
+#define TEST_REG0 3
 #define TEST_REG0_TB_OFFSET 0
 #define TEST_REG0_BX_OFFSET 3
 
