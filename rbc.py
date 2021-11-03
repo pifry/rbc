@@ -78,6 +78,7 @@ class TextDoc:
 
     def save(self, filename) -> None:
         info(f"Saving into {filename}")
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as file:
             file.write(str(self))
 
