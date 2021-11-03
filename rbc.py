@@ -5,6 +5,7 @@ import argparse
 import logging
 from logging import info
 import os
+from pathlib import Path
 
 
 class Protocol:
@@ -333,7 +334,7 @@ if __name__ == "__main__":
         with io.open(vhdl_template_file, 'r') as file:
             vhdl_template = file.read()
 
-        vhdl = VHDL(vhdl_template, yaml_protocol, 'test0')
+        vhdl = VHDL(vhdl_template, yaml_protocol, Path(vhdl_file).stem)
         vhdl.save(vhdl_file)
 
     if cheader_file:
@@ -341,7 +342,7 @@ if __name__ == "__main__":
         with io.open(ched_template_file, 'r') as file:
             h_template = file.read()
 
-        c_header = CHeader(h_template, yaml_protocol, 'test0')
+        c_header = CHeader(h_template, yaml_protocol, Path(cheader_file).stem)
         c_header.save(cheader_file)
 
     if markdown_file:
