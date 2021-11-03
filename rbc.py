@@ -146,7 +146,7 @@ class Markdown(TextDoc):
     def get_description(self, register) -> str:
         text = ""
         for field in register.fields():
-            text += f"- {field.name}[{field.width}:{0}] - {field.description}\n"
+            text += f"- {field.name}[{field.width - 1}:{0}] - {field.description}\n"
         if field.activation_bit:
             text += f"\n*WARNING:* Changes to this register must be applied by writing '1' to the {field.activation_bit} bit.\n"
 
