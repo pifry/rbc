@@ -49,10 +49,11 @@ class Protocol:
             def __str__(self) -> str:
                 return self.name
 
-        def __init__(self, description) -> None:
+        def __init__(self, description, address) -> None:
             self.name = description['name']
             self.width = description['width']
             self.read_ind = description.get('read_ind', False)
+            self.address = address
             self.__fields_dict__ = description['fields']
 
         def fields(self):
@@ -65,7 +66,7 @@ class Protocol:
         self.__registers_dict__ = description
 
     def registers(self):
-        return (Protocol.Register(register) for register in self.__registers_dict__)
+        return (Protocol.Register(register, i) for i, register in enumerate(self.__registers_dict__))
 
     def required_bus_data_width(self):
         return 16
@@ -135,7 +136,7 @@ class Markdown(TextDoc):
         return text
 
     def get_title(self, register) -> str:
-        text = "# " + register.name + '\n'
+        text = f"# {register.name}: 0x{register.address:02}\n"
         return text
 
     def get_table(self, register) -> str:
@@ -176,8 +177,8 @@ class CHeader(TextDoc, Template):
 
     def template_definitions(self) -> str:
         text = ""
-        for i, register in enumerate(self.protocol.registers()):
-            text += f'#define {register.name} {i}\n'
+        for register in self.protocol.registers():
+            text += f'#define {register.name} {register.address}\n'
             for field in register.fields():
                 text += f'#define {field.full_name()}_OFFSET {field.offset}\n'
         return text[:-1]
@@ -225,14 +226,12 @@ class VHDL(TextDoc, Template):
 
     def template_write_process(self) -> str:
         text = ""
-        address = 0
         for register in self.protocol.registers():
-            text += 20*" " + f'when {address} =>\n'
+            text += 20*" " + f'when {register.address} =>\n'
             for field in register.fields():
                 if field.direction in field.WRITABLE:
                     text += 24 * " " + \
                         f"{field.full_name()}_o <= avl_writedata_i({field.absolute_range()});\n"
-            address += 1
         return text[:-1]
 
     def template_default_values(self) -> str:
@@ -252,19 +251,16 @@ class VHDL(TextDoc, Template):
 
     def template_read_ind_set(self) -> str:
         text = ""
-        address = 0
         for register in self.protocol.registers():
             if register.read_ind:
-                text += 20*" " + f'when {address} =>\n'
+                text += 20*" " + f'when {register.address} =>\n'
                 text += 24*" " + f"{str(register)}_read_o <= '1';\n"
-            address += 1
         return text[:-1]
 
     def template_read_process(self) -> str:
         text = ""
-        address = 0
         for register in self.protocol.registers():
-            text += 20*" " + f'when {address} =>\n'
+            text += 20*" " + f'when {register.address} =>\n'
             text += 24*" " + f"avl_readdata_o({register.width} - 1 downto 0) <= "
             equation_text = ""
             zeros = ""
@@ -290,7 +286,6 @@ class VHDL(TextDoc, Template):
             if zeros != "":
                 equation_text += f'"{zeros}"'
             text += equation_text + ";\n"
-            address += 1
         return text[:-1]
 
     def __str__(self) -> str:
