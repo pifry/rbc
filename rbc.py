@@ -46,13 +46,20 @@ class Protocol:
                 return "std_logic" if self.width == 1 else \
                     f"std_logic_vector({self.range()})"
 
+            def __str__(self) -> str:
+                return self.name
+
         def __init__(self, description) -> None:
             self.name = description['name']
             self.width = description['width']
+            self.read_ind = description.get('read_ind', False)
             self.__fields_dict__ = description['fields']
 
         def fields(self):
             return (Protocol.Register.Field(field, self.name) for field in self.__fields_dict__)
+
+        def __str__(self) -> str:
+            return self.name
 
     def __init__(self, description) -> None:
         self.__registers_dict__ = description
@@ -71,6 +78,7 @@ class TextDoc:
 
     def save(self, filename) -> None:
         info(f"Saving into {filename}")
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as file:
             file.write(str(self))
 
@@ -138,7 +146,7 @@ class Markdown(TextDoc):
     def get_description(self, register) -> str:
         text = ""
         for field in register.fields():
-            text += f"- {field.name}[{field.width}:{0}] - {field.description}\n"
+            text += f"- {field.name}[{field.width - 1}:{0}] - {field.description}\n"
         if field.activation_bit:
             text += f"\n*WARNING:* Changes to this register must be applied by writing '1' to the {field.activation_bit} bit.\n"
 
@@ -198,6 +206,11 @@ class VHDL(TextDoc, Template):
     def template_port_declaration(self):
         text = ""
         for register in self.protocol.registers():
+
+            if register.read_ind:
+                    text += 8*" " + \
+                        f'{str(register)}_read_o : OUT std_logic;\n'
+
             for field in register.fields():
 
                 if field.direction in field.WRITABLE:
@@ -207,6 +220,7 @@ class VHDL(TextDoc, Template):
                 if field.direction in field.READABLE:
                     text += 8*" " + \
                         f'{field.full_name()}_i : IN std_logic_vector({field.range()});\n'
+                
         return text[:-1]
 
     def template_write_process(self) -> str:
@@ -229,6 +243,23 @@ class VHDL(TextDoc, Template):
                     text += 12*" " + f"{field.full_name()}_o <= (others => '0');\n"
         return text[:-1]
 
+    def template_read_ind_reset(self) -> str:
+        text = ""
+        for register in self.protocol.registers():
+                if register.read_ind:
+                    text += 12*" " + f"{str(register)}_read_o <= '0';\n"
+        return text[:-1]
+
+    def template_read_ind_set(self) -> str:
+        text = ""
+        address = 0
+        for register in self.protocol.registers():
+            if register.read_ind:
+                text += 20*" " + f'when {address} =>\n'
+                text += 24*" " + f"{str(register)}_read_o <= '1';\n"
+            address += 1
+        return text[:-1]
+
     def template_read_process(self) -> str:
         text = ""
         address = 0
@@ -244,7 +275,7 @@ class VHDL(TextDoc, Template):
                                  if field.offset + field.width - 1 == i and field.direction in field.READABLE)
                 except StopIteration:
                     field = None
-                if field:
+                if field: 
                     i -= field.width
                     if zeros != "":
                         equation_text += f'"{zeros}" & {field.full_name()}_i'

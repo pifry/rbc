@@ -36,6 +36,27 @@ BEGIN
         END IF;
     END PROCESS avl_read;
 
+    read_ind: process(clk_i, rst_a_i)
+        procedure reset is
+        begin 
+-- {read_ind_reset}            
+        end procedure reset;
+    begin
+        if rst_a_i = '1' then
+            reset;
+        elsif rising_edge(clk_i) then
+            IF avl_read_i = '1' THEN
+                CASE (to_integer(unsigned(avl_address_i))) IS
+-- {read_ind_set}
+                    WHEN OTHERS =>
+                        reset;
+                END CASE;
+            ELSE
+                reset;
+            END IF;
+        end if;
+    end process read_ind;
+
     avl_write : PROCESS (clk_i, rst_a_i)
     BEGIN
         IF rst_a_i = '1' THEN
