@@ -24,6 +24,7 @@ class Protocol:
                 self.offset = self._data['offset']
                 self.direction = self._data['direction']
                 self.description = self._data['description']
+                self.default = self._data['default'] if "default" in self._data else None
                 if "activation_bit" in self._data:
                     self.activation_bit = self._data['activation_bit']
                 else:
@@ -240,7 +241,8 @@ class VHDL(TextDoc, Template):
         for register in self.protocol.registers():
             for field in register.fields():
                 if field.direction in field.WRITABLE:
-                    text += 12*" " + f"{field.full_name()}_o <= (others => '0');\n"
+                    default = "(others => '0')" if not field.default else f'"{field.default}"'
+                    text += 12*" " + f"{field.full_name()}_o <= {default};\n"
         return text[:-1]
 
     def template_read_ind_reset(self) -> str:
