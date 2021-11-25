@@ -16,6 +16,7 @@ class Protocol:
 
             READABLE = ('R', 'RW')
             WRITABLE = ('W', 'RW')
+            DEFAULT_BIT_VALUE = "0"
 
             def __init__(self, data, parent) -> None:
                 self._data = data
@@ -141,11 +142,13 @@ class Markdown(TextDoc):
         text = "|Default"
         for i in range(register.width-1, -1, -1):
             text += "|"
-            field_text = "0"
+            field_text = "N/A"
             for field in register.fields():
                 if i >= field.offset and i < field.offset + field.width:
                     if field.default:
                         field_text = field.default[field.width - 1 - (i - field.offset)]
+                    else:
+                        field_text = field.DEFAULT_BIT_VALUE
             text += field_text
         text += "|\n"
         return text
@@ -255,7 +258,7 @@ class VHDL(TextDoc, Template):
         for register in self.protocol.registers():
             for field in register.fields():
                 if field.direction in field.WRITABLE:
-                    default = "(others => '0')" if not field.default else f'"{field.default}"'
+                    default = f"(others => '{field.DEFAULT_BIT_VALUE}')" if not field.default else f'"{field.default}"'
                     text += 12*" " + f"{field.full_name()}_o <= {default};\n"
         return text[:-1]
 
