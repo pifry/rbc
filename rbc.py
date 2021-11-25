@@ -145,7 +145,7 @@ class Markdown(TextDoc):
             for field in register.fields():
                 if i >= field.offset and i < field.offset + field.width:
                     if field.default:
-                        field_text = field.default[i - field.offset]
+                        field_text = field.default[field.width - 1 - (i - field.offset)]
             text += field_text
         text += "|\n"
         return text
