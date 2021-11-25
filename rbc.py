@@ -136,6 +136,19 @@ class Markdown(TextDoc):
             text += field_text
         text += "|\n"
         return text
+    
+    def get_defaults(self, register) -> str:
+        text = "|Default"
+        for i in range(register.width-1, -1, -1):
+            text += "|"
+            field_text = "0"
+            for field in register.fields():
+                if i >= field.offset and i < field.offset + field.width:
+                    if field.default:
+                        field_text = field.default[i - field.offset]
+            text += field_text
+        text += "|\n"
+        return text
 
     def get_title(self, register) -> str:
         text = f"# {register.name}: 0x{register.address:02}\n"
@@ -144,7 +157,8 @@ class Markdown(TextDoc):
     def get_table(self, register) -> str:
         return self.get_header(register) + \
             self.get_direction(register) + \
-            self.get_names(register)
+            self.get_names(register) + \
+            self.get_defaults(register)
 
     def get_description(self, register) -> str:
         text = ""
